@@ -2,7 +2,7 @@ import { streamText } from 'ai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 
 const googleProvider = createGoogleGenerativeAI({
-  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY || "API_KEY_PASTE_HERE"
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY || "apikkkkkk"
 })
 
 export const maxDuration = 30

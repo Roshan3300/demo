@@ -308,11 +308,14 @@ export default function LegalAssistant() {
   ]
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+    }
   }
 
   useEffect(() => {
-    scrollToBottom()
+    const timeoutId = setTimeout(scrollToBottom, 100)
+    return () => clearTimeout(timeoutId)
   }, [messages])
 
   const toggleListening = () => {
@@ -421,7 +424,7 @@ export default function LegalAssistant() {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-background via-background to-muted/20 overflow-off-hidden">
+    <div className="flex h-screen bg-gradient-to-br from-background via-background to-muted/20 overflow-hidden">
       {isMobileSidebarOpen && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
@@ -595,7 +598,7 @@ export default function LegalAssistant() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
         <div className="p-3 lg:p-4 border-b border-border/50 bg-gradient-to-r from-card/80 via-card/90 to-card/80 backdrop-blur-xl shadow-sm">
           <div className="flex items-center justify-between gap-4">
             <Button

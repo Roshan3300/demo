@@ -15,6 +15,14 @@ export function useSpeechRecognition({ language, onResult, onError }: UseSpeechR
   const recognitionRef = useRef<any>(null)
   const isStartingRef = useRef(false)
 
+  const onResultRef = useRef(onResult)
+  const onErrorRef = useRef(onError)
+
+  useEffect(() => {
+    onResultRef.current = onResult
+    onErrorRef.current = onError
+  }, [onResult, onError])
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
@@ -49,7 +57,7 @@ export function useSpeechRecognition({ language, onResult, onError }: UseSpeechR
         recognition.onresult = (event: any) => {
           console.log("[v0] Speech recognition result received")
           const transcript = event.results[0][0].transcript
-          onResult(transcript)
+          onResultRef.current(transcript)
           setIsListening(false)
         }
 
@@ -61,24 +69,24 @@ export function useSpeechRecognition({ language, onResult, onError }: UseSpeechR
           switch (event.error) {
             case "not-allowed":
               setPermissionStatus("denied")
-              onError?.("Microphone permission denied. Please allow microphone access and try again.")
+              onErrorRef.current?.("Microphone permission denied. Please allow microphone access and try again.")
               break
             case "aborted":
               if (isStartingRef.current) {
-                onError?.("Speech recognition was interrupted. Please try again.")
+                onErrorRef.current?.("Speech recognition was interrupted. Please try again.")
               }
               break
             case "no-speech":
-              onError?.("No speech detected. Please speak clearly and try again.")
+              onErrorRef.current?.("No speech detected. Please speak clearly and try again.")
               break
             case "network":
-              onError?.("Network error. This might be a browser issue. Try refreshing the page or using Chrome/Safari.")
+              onErrorRef.current?.("Network error. This might be a browser issue. Try refreshing the page or using Chrome/Safari.")
               break
             case "service-not-allowed":
-              onError?.("Speech recognition service not available. Try using Chrome or Safari.")
+              onErrorRef.current?.("Speech recognition service not available. Try using Chrome or Safari.")
               break
             default:
-              onError?.(`Speech recognition error: ${event.error}`)
+              onErrorRef.current?.(`Speech recognition error: ${event.error}`)
           }
         }
 
@@ -107,7 +115,7 @@ export function useSpeechRecognition({ language, onResult, onError }: UseSpeechR
         }
       }
     }
-  }, [language, onResult, onError])
+  }, [language])
 
   const requestPermission = async () => {
     try {
@@ -123,7 +131,7 @@ export function useSpeechRecognition({ language, onResult, onError }: UseSpeechR
 
   const startListening = async () => {
     if (!isSupported) {
-      onError?.("Speech recognition not supported. Please use Chrome, Safari, or Edge.")
+      onErrorRef.current?.("Speech recognition not supported. Please use Chrome, Safari, or Edge.")
       return
     }
 
@@ -133,14 +141,14 @@ export function useSpeechRecognition({ language, onResult, onError }: UseSpeechR
     }
 
     if (permissionStatus === "denied") {
-      onError?.("Microphone permission denied. Please allow microphone access in your browser settings.")
+      onErrorRef.current?.("Microphone permission denied. Please allow microphone access in your browser settings.")
       return
     }
 
     if (permissionStatus === "prompt" || permissionStatus === "unknown") {
       const granted = await requestPermission()
       if (!granted) {
-        onError?.("Microphone permission is required for speech recognition.")
+        onErrorRef.current?.("Microphone permission is required for speech recognition.")
         return
       }
     }
@@ -153,7 +161,7 @@ export function useSpeechRecognition({ language, onResult, onError }: UseSpeechR
       } catch (error) {
         console.error("[v0] Error starting speech recognition:", error)
         isStartingRef.current = false
-        onError?.("Failed to start speech recognition. Please try again.")
+        onErrorRef.current?.("Failed to start speech recognition. Please try again.")
       }
     }
   }
@@ -188,6 +196,16 @@ export function useTextToSpeech({ language, onStart, onEnd, onError }: UseTextTo
   const [isSupported, setIsSupported] = useState(false)
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
 
+  const onStartRef = useRef(onStart)
+  const onEndRef = useRef(onEnd)
+  const onErrorRef = useRef(onError)
+
+  useEffect(() => {
+    onStartRef.current = onStart
+    onEndRef.current = onEnd
+    onErrorRef.current = onError
+  }, [onStart, onEnd, onError])
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       setIsSupported("speechSynthesis" in window)
@@ -196,7 +214,7 @@ export function useTextToSpeech({ language, onStart, onEnd, onError }: UseTextTo
 
   const speak = (text: string) => {
     if (!isSupported) {
-      onError?.("Text-to-speech not supported")
+      onErrorRef.current?.("Text-to-speech not supported")
       return
     }
 
@@ -213,13 +231,13 @@ export function useTextToSpeech({ language, onStart, onEnd, onError }: UseTextTo
 
     utterance.onstart = () => {
       setIsSpeaking(true)
-      onStart?.()
+      onStartRef.current?.()
     }
 
     utterance.onend = () => {
       setIsSpeaking(false)
       utteranceRef.current = null
-      onEnd?.()
+      onEndRef.current?.()
     }
 
     utterance.onerror = (event) => {
@@ -227,7 +245,7 @@ export function useTextToSpeech({ language, onStart, onEnd, onError }: UseTextTo
       setIsSpeaking(false)
       utteranceRef.current = null
       if (event.error !== "interrupted") {
-        onError?.(event.error)
+        onErrorRef.current?.(event.error)
       }
     }
 
